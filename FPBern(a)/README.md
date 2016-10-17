@@ -17,12 +17,12 @@ ex: x1 = [-1 1] and x2 = [-2 2]
 ###Programs representation
 FPBern(a) handles input files with .ini extension (this is mandatory) with the following structure:
 
-[OPTIONS]
+ - OPTIONS
 name = `name of the programs`
 epsilon = `machine precision as 2^(-epsilon)`
 nbvars = `dimension of x`
 nberrors = `dimension of e`
-[Programs]
+ - Programs
 function = ` polynomials function with the operation +,*,- and ^ (and / in the coefficients)`
 input_bl = `lower bounds of the input values`
 input_bu = `upper bounds of the input values`
