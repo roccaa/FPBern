@@ -2,16 +2,21 @@
 ## Description
 `FPBern(a)` is a tool for computation of roundoff error bounds using Bernstein expansion.
 
-If the roundoff error of a polynomial f(x)  is given by r(x,e) s.t.:\\
-			r(x,e) = l(x,e)+h(x,e)\\
-with `l(x,e)` the part of `r(x,e)` linear w.r.t `e` and `h(x,e)` the part  of `r(x,e)` non-linear in `e`.\\
+If the roundoff error of a polynomial f(x)  is given by r(x,e) s.t.:
+
+			r(x,e) = l(x,e)+h(x,e)
+
+with `l(x,e)` the part of `r(x,e)` linear w.r.t `e` and `h(x,e)` the part  of `r(x,e)` non-linear in `e`.
+
 Then `FPBern(a)` gives an upper bound of `|l(x,e)|` for `x` laying inside a box, and `e` enclose by a given epsilon. 
 
 Thus, the semantic of the handled programs is:
 
-- polynomial functions taken into isolation\\
+- polynomial functions taken into isolation
+
 ex: x1^3 + (3/4)*x1*x2^2
-- inputs laying inside a box\\
+- inputs laying inside a box
+
 ex: x1 = [-1 1] and x2 = [-2 2]
 
 ###Programs representation
@@ -29,7 +34,7 @@ FPBern(a) handles input files with .ini extension (this is mandatory) with the f
 
 ## Installation instructions
 ### Prerequisites
-FPBern(a) is implemented in C++. Thus, a C++ compiler is required.\\
+FPBern(a) is implemented in C++. Thus, a C++ compiler is required.
 FPBern(a) was tested on Ubuntu 14.04 LTS.
 
 Moreover, FPBern(a) relies on three external libraries:
