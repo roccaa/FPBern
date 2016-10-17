@@ -2,8 +2,8 @@
 ## Description
 `FPBern(a)` is a tool for computation of roundoff error bounds using Bernstein expansion.
 
-If the roundoff error of a polynomial f(x)  is given by r(x,e) s.t.:
-			r(x,e) = l(x,e)+h(x,e)
+If the roundoff error of a polynomial f(x)  is given by r(x,e) s.t.:\\
+			r(x,e) = l(x,e)+h(x,e)\\
 with `l(x,e)` the part of `r(x,e)` linear w.r.t `e` and `h(x,e)` the part  of `r(x,e)` non-linear in `e`.\\
 Then `FPBern(a)` gives an upper bound of `|l(x,e)|` for `x` laying inside a box, and `e` enclose by a given epsilon. 
 
@@ -18,7 +18,7 @@ ex: x1 = [-1 1] and x2 = [-2 2]
 FPBern(a) handles input files with .ini extension (this is mandatory) with the following structure:
 
  + OPTIONS
-- name = `name of the programs`
+- name = `name of the program`
 - epsilon = `machine precision as 2^(-epsilon)`
 - nbvars = `dimension of x`
 - nberrors = `dimension of e`
