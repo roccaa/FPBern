@@ -1,0 +1,12 @@
+addpath(genpath('benchmarks/'))
+addpath(genpath('include/'))
+addpath(genpath('src/'))
+rigibody1real
+rigibody2real
+kepler0real
+kepler1real
+kepler2real
+sineTaylorreal
+sineOrder3real
+sqrootreal
+himmilbeaureal
