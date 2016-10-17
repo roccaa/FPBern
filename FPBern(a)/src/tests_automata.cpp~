@@ -1,0 +1,53 @@
+// /*
+// * main_testTommaso.cpp
+// *
+// *  Created on: 10 dec 2015
+// *      Author: alex
+// */
+//
+//
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
+//#include 	<ppl_c.h>;
+//#include 	<ppl.hh>;
+
+#include "Iron.h"
+#include "BernsteinReach.h"
+#include "HoneyBeesSiteChoice.h"
+#include "Dyctostellium.h"
+#include "Quadcopter.h"
+
+
+
+using namespace std;
+using namespace GiNaC;
+using namespace bern;
+//namespace ppl = Parma_Polyhedra_Library;
+
+int main(int argc,char** argv){
+
+	FilesManager *f_m = NULL;
+//	Model *model = new Iron();
+	Model *model = new HoneyBees_Site_Choice();
+//	Model *model = new Dyctostellium();
+//	Model *model = new Quadcopter();
+
+	vector<int> options = model->get_options_reach();
+
+	SimulationEngine * sim = new SimulationEngine(model);
+	sim->launch();
+//	SimulationEngine * sim = NULL;
+
+	BernsteinReach *breach = new BernsteinReach(model,f_m,sim,options);
+	clock_t tStart = clock();
+	breach->reach_main(options[4],options);
+	printf("\n ReachabTime taken: %.5fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+	breach->print_info_file(model->result_file);
+
+}
+
+
+
+
+

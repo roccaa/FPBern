@@ -1,0 +1,67 @@
+/*
+ * FilesManager.h
+ *
+ *  Created on: Aug 21, 2015
+ *      Author: rocca
+ */
+
+#ifndef FILESMANAGER_H_
+#define FILESMANAGER_H_
+
+#include "Model.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include "ResultFile.h"
+
+class FilesManager {
+public:
+	FilesManager();
+	FilesManager(string file_name);
+	void console_print();
+	void console_print(int file);
+	void console_print(int iteration, int file);
+	void console_print(double time, int file);
+	void file_print();
+	void file_print(int file);
+	void file_print(int iteration, int file);
+	void file_print(double time, int file);
+	void add_to_print(Polyhedron* set, int current_step, double current_time);
+	void add_to_print(string info_vars, int file);
+	void add_to_print(string info_vars,string info_time, int file);
+	Model * get_model(){return this->model;}
+	void read_methods_options(string file_name);
+	void create_model(string file_name);
+	void read_optional_values(string file_name);
+	void read_symbolic_model(string file_name);
+	lst read_symbolic_variables(boost::property_tree::ptree pt,string section);
+	lst read_symbolic_equations(boost::property_tree::ptree pt,string section);
+	void read_instantiation(string file_name);
+	vector<Polyhedron*> read_initial_sets(boost::property_tree::ptree pt);
+	Polyhedron* read_polyhedron(boost::property_tree::ptree pt,string index);
+	Polyhedron* read_box(boost::property_tree::ptree pt,string index);
+	Polyhedron* read_parallelotope(boost::property_tree::ptree pt,string index);
+	vector<doubleVector> read_matrix_std(boost::property_tree::ptree pt,string index,string section,string r_string, int n_r, int n_c);
+	vector<lst> create_symbols4parallelotopes(int dim);
+	lst read_param_instantiation(boost::property_tree::ptree pt,lst dyns);
+	LinearSystemSet * read_param_linearsystem(boost::property_tree::ptree pt);
+	intVector get_options_reach(void){return this->options_reach;}
+	void update_model();
+	virtual ~FilesManager();
+
+private:
+	string file_name;
+	Model * model;
+	vector<bool> options_approximation;
+	intVector options_reach;
+	string time_unit;
+    symtab table_symbols;
+    bool para_symbols;
+    vector<lst> symbol_vars_para;
+    vector<symbol> varsVector_sym;
+    double dft_err;
+    double dft_tstep;
+    int nb_sim_sampling;
+
+};
+
+#endif /* FILESMANAGER_H_ */

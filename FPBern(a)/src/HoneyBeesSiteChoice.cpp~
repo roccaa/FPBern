@@ -1,0 +1,280 @@
+/*
+ * HoneyBeesSiteChoice.cpp
+ *
+ *  Created on: Jan 25, 2016
+ *      Author: rocca
+ */
+
+#include "HoneyBeesSiteChoice.h"
+
+HoneyBees_Site_Choice::HoneyBees_Site_Choice() {
+
+	this->name = "HoneyBees_Site_Choice";
+	cout << "building model: " << this->name << endl;
+
+	// List of state variables and parameters
+	possymbol x("x"), y1("y1"), y2("y2"), z1("z1"), z2("z2");
+
+	/* Notice: Tfsat is the input variable in iron: must be controled during the computation in a latter version, set to 0 for now*/
+	//	ex beta1 = 0.001;
+	//	ex beta2 = 0.001;
+	//	ex gamma = 0.3;
+	//	ex delta = 0.5;
+	//	ex alpha = 0.7;
+	possymbol  	beta1("beta1"), beta2("beta2"), gamma("gamma"), delta("delta"), alpha("alpha");
+
+	lst vars, params, dyns;
+
+	possymbol tvar("tvar");
+
+	vector<symbol> varsVector = {x, y1, y2, z1, z2};
+	vars = x, y1, y2, z1, z2;
+
+	/*pas de parametres variable ! ensemble P1 entierement parametrisé de BCM2013*/
+	//params = empty
+
+	// System's dynamics (with TfSat = 0 during the whole computation)
+	ex dx = (-beta1*x*y1-beta2*x*y2);
+	ex dy1 = (beta1*x*y1-gamma*y1+delta*beta1*y1*z1+alpha*beta1*y1*z2);
+	ex dy2 = (beta2*x*y2-gamma*y2+delta*beta2*y2*z2+alpha*beta2*y2*z1);
+	ex dz1 = (gamma*y1-delta*beta1*y1*z1-alpha*beta2*y2*z1);
+	ex dz2 = (gamma*y2-delta*beta2*y2*z2-alpha*beta1*y1*z2);
+
+	dyns = dx,dy1,dy2,dz1,dz2;
+	this->dyns = dyns;
+	cout << "dynamics input done!\n";
+
+	// Initialize uncontrollable parameters
+	lst uncontr_params;
+	uncontr_params.append(beta1 == 0.001);
+	uncontr_params.append(beta2 == 0.001);
+	uncontr_params.append(gamma == 0.3);
+	uncontr_params.append(delta == 0.5);
+	uncontr_params.append(alpha == 0.7);
+
+	dyns[0] = dyns[0].subs( uncontr_params );
+	dyns[1] = dyns[1].subs( uncontr_params );
+	dyns[2] = dyns[2].subs( uncontr_params );
+	dyns[3] = dyns[3].subs( uncontr_params );
+	dyns[4] = dyns[4].subs( uncontr_params );
+
+	cout << "Constant parameters added!\n";
+	this->vars = vars;
+	this->params = params;
+	this->fix_param_dyns = dyns;
+
+	/* variables symbolic for parallelotopic computation */
+	possymbol q1("q1"), q2("q2"), q3("q3"), q4("q4"), q5("q5");	// base vertex variables
+	possymbol a1("a1"), a2("a2"), a3("a3"), a4("a4"), a5("a5");	// parallelotope variables
+	possymbol b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5");	// amplitude variables
+
+	lst qs, as, bs;
+	qs = q1,q2,q3,q4,q5;
+	as = a1,a2,a3,a4,a5;
+	bs = b1,b2,b3,b4,b5;
+	this->baseVertex_s = qs;
+	this->unitBoxVars_s = as;
+	this->amplitudeVars_s = bs;
+
+	// Fixed Template (box by default)
+	doubleVector row = doubleVector(this->vars.nops(),0);
+	vector<doubleVector> u= vector<doubleVector>(this->vars.nops(),row);
+	u[0][0] = 1;
+	u[1][1] = 1;
+	u[2][2] = 1;
+	u[3][3] = 1;
+	u[4][4] = 1;
+
+	this->fixedTemplate = u;
+	this->use_parralelotope = true;
+	//this->bernCoeff_method = IMPLICIT_NUM;
+	this->bernCoeff_method = EXPLICIT_SYM;
+
+
+/* Pour simu entierement parametrisée*/
+	vector<double> pAi (1,0);
+	vector< vector<double> > pA (2,pAi);
+	vector<double> pb (2,0);
+
+
+	LinearSystem *parameters = new LinearSystem(pA,pb);
+	LinearSystemSet *parameter_set = new LinearSystemSet(parameters);
+	/* Ensemble des parametres initialisé */
+	this->init_para_set = parameter_set;
+
+	/* Ensemble initial */
+	vector<lst> set_vars;
+	set_vars.push_back(qs);
+	set_vars.push_back(as);
+	set_vars.push_back(bs);
+
+	// Buiklding the templates;
+	vector_matrix A;
+	for(int i=0;i<u.size();i++)
+		A.push_back(-1*u[i]);
+	for(int i=0;i<u.size();i++)
+			A.push_back(u[i]);
+	doubleVector b = {-500,-390,-90,1e-30,1e-30,(500+1e-10),400,100,1e-30,1e-30}; // TODO cannot put zeros !!!!
+//	vector_matrix A;
+//	for(int i=0;i<u.size();i++)
+//			A.push_back(u[i]);
+//	for(int i=0;i<u.size();i++)
+//		A.push_back(-1*u[i]);
+//	doubleVector b = {500,400,100,0,0,-500,-390,-90,0,0};
+	LinearSystem *Lambdad = new LinearSystem(A,b);
+
+	Parallelotope * set_1 = new Parallelotope(set_vars, Lambdad);
+	cout << "Static set build \n";
+	cout << "bl = " << set_1->overBox->getBl();
+	cout << "bu = " << set_1->overBox->getBu();
+	Parallelotope * set_2 = new Parallelotope(set_vars, Lambdad);
+	cout << "Dynamic set build \n";
+
+
+//	cout << "---> add Poly value\n"; // If genrators ---> constraite description
+//	//Starting point
+//	doubleVector init_baseVertex = {500,390,90,0,0};
+//	doubleVector init_amplitude = {1,10,10,1,1};
+//	poly_values p;
+//	p.base_vertex = init_baseVertex;
+//	p.versors = u;
+//	p.lenghts = init_amplitude;
+//	set_1->add_polyValues(p);
+//	set_2->add_polyValues(p);
+
+
+	/* With parallelotope list description*/
+//	vector<Parallelotope *> l_para = {set_1};
+//	intVector b_options = {STATIC};
+	vector<Parallelotope *> l_para = {set_1,set_2};
+	intVector b_options = {STATIC,DYNAMIC};
+	this->dynamic_template = true;
+	this->initial_set = new Bundle(l_para, b_options);
+
+//	/* With Template and Constraint matrix description */
+//	// The initial set
+//	int num_dirs = 7;
+//	int num_temps = 3;
+//
+//	// Directions matrix
+//	vector< double > Li (5,0);
+//	vector< vector< double > > L (num_dirs,Li);
+//	L[0][0] = 1;
+//	L[1][1] = 1;
+//	L[2][2] = 1;
+//	L[3][3] = 1;
+//	L[4][4] = 1;
+//	L[5][0] = 1; L[5][1] = 0.5;
+//	L[6][1] = 0.5; L[6][4] = 1;
+//	//L[7][2] = 0.5; L[7][3] = 0.5;
+//
+//	// Offsets
+//	vector< double > offp (num_dirs,0);
+//	vector< double > offm (num_dirs,0);
+//	offp[0] = 500; offm[0] = -500;
+//	offp[1] = 400; offm[1] = -390;
+//	offp[2] = 100; offm[2] = -90;
+//	offp[3] = 0; offm[3] = 0;
+//	offp[4] = 0; offm[4] = 0;
+//	offp[5] = 1000; offm[5] = 1000;
+//	offp[6] = 1000; offm[6] = 1000;
+//	//offp[7] = 1000; offm[7] = 1000;
+//
+//	// Template matrix
+//	vector< int > Ti (5,0);
+//	vector< vector< int > > T (num_temps,Ti);
+//
+//	T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4;
+//	T[1][0] = 1; T[1][1] = 2; T[1][2] = 3; T[1][3] = 4; T[1][4] = 5;
+//	T[2][0] = 0; T[2][1] = 2; T[2][2] = 3; T[2][3] = 5; T[2][4] = 6;
+//
+//
+//	Bundle *B = new Bundle(L,offp,offm,T);
+//	B->set_vars(qs,as,bs);
+//	intVector b_options = {STATIC,STATIC,STATIC};
+//	B->set_bOptions(b_options);
+//	this->dynamic_template = false;
+//	this->initial_set = B;
+
+
+
+
+	ApproximationBuilder *approx = new ApproximationBuilder(); // Constructeur par default
+
+	this->dft_tstep = 0.01;//(seconds)
+	/* Not useful anymore TODO */
+	cout << "discretization of the dynamics !\n";
+	lst tempdyns = approx->compute_eulerDiscretization(this->dft_tstep,this->fix_param_dyns,this->vars);
+	this->disc_dyns  = tempdyns;
+	cout << "model de base done !\n";
+
+	this->partition_tree = NULL;
+
+	vector<Property> lp;
+	approx->set_listProperties(lp);
+	this->approximationBuilder = approx;
+	cout << "Information for Simulation engine\n";
+
+	this->options_reach = {4, Partial_Hessian_Box_GridBased, Max_Box_Size, EXPLICIT_SYM,1500, EULER, FULL_TEMPLATE_GUESS};
+	this->nb_sim_sampling = 1;
+	//this->euler_method = GINAC_EX;
+	this->euler_method = C_FUNCTION;
+	this->vars_for_templt_guess = {0,1,3};
+	this->reach_mode = AFO;
+	this->print_var = {0,1};
+	if(options_reach[6] == PARTIAL_TEMPLATE_GUESS)
+	{
+		if(this->dynamic_template == true)
+			this->result_file = name+"_"+boost::lexical_cast<string>(options_reach[4])+"_"+"partial"+"_d_"+boost::lexical_cast<string>(print_var[0])+"_"+boost::lexical_cast<string>(print_var[1])+"_"+boost::lexical_cast<string>(this->nb_sim_sampling)+"samples";
+	}
+	else
+	{
+		if(this->dynamic_template == true)
+			this->result_file = name+"_"+boost::lexical_cast<string>(options_reach[4])+"_"+"full"+"_d_"+boost::lexical_cast<string>(print_var[0])+"_"+boost::lexical_cast<string>(print_var[1])+"_"+boost::lexical_cast<string>(this->nb_sim_sampling)+"samples";
+
+	}
+
+	if(this->dynamic_template == false)
+			this->result_file = name+"_"+boost::lexical_cast<string>(options_reach[4])+"_static_"+boost::lexical_cast<string>(print_var[0])+"_"+boost::lexical_cast<string>(print_var[1]);
+
+	this->print_sample = 10;
+
+	cout << "Model Construit ! \n";
+
+}
+
+
+arma::Col<double> Model::euler_step(arma::Col<double> *init_values, int dim){
+	arma::Col<double> res = arma::Col<double>(dim);
+
+	double beta1 = 0.001;
+	double beta2 = 0.001;
+	double gamma = 0.3;
+	double delta = 0.5;
+	double alpha = 0.7;
+
+
+	double x = init_values->at(0);
+	double y1 = init_values->at(1);
+	double y2 = init_values->at(2);
+	double z1 = init_values->at(3);
+	double z2 = init_values->at(4);
+
+	res(0) = x + this->dft_tstep*(-beta1*x*y1-beta2*x*y2);
+	res(1) = y1 + this->dft_tstep*(beta1*x*y1-gamma*y1+delta*beta1*y1*z1+alpha*beta1*y1*z2);
+	res(2) = y2 + this->dft_tstep*(beta2*x*y2-gamma*y2+delta*beta2*y2*z2+alpha*beta2*y2*z1);
+	res(3) = z1 + this->dft_tstep*(gamma*y1-delta*beta1*y1*z1-alpha*beta2*y2*z1);
+	res(4) = z2 + this->dft_tstep*(gamma*y2-delta*beta2*y2*z2-alpha*beta1*y1*z2);
+
+
+	return res;
+
+}
+
+
+
+HoneyBees_Site_Choice::~HoneyBees_Site_Choice() {
+	// TODO Auto-generated destructor stub
+	delete this->init_para_set;
+}
+

@@ -1,0 +1,142 @@
+
+##################   TODO LIST ##########################
+
+
+###### KNOWN ISSUES :
+
+	- The set tightenning is subject to numerical error when using the dynamic templates
+		+ due to glpk numerical error ?
+		+ due to an error during the reachability analysis phase ?
+
+	- The update of the equation is incomplete some case were forgotten (update function de-activated, regeneration done each time)
+		+ case 1: at time t+1 the constraint will change (done but not minimal)
+		+ case 2: at time t-1 the genarator function changed (TODO)
+		+ case 3: case 1 and case 2 simultaneous (only this as been done, but tested as case 1 ... TODO)
+
+	- The partial guess behave poorly -> worse than only box
+		+ reason ?
+	
+	- Memory leak are probably present
+		+ they are not big but it could be a pb on 300,000 steps if there is splitting
+		+ Use Valgring the find and correct them	
+		+ A lot of leaks in the model description -> not important currently but cleanning needed later
+
+	- Some bugs in the Bundle implementation of Tommaso (At least the one I have)
+		+ Due to numerical imprecision the constraint/generator conversion sometimes return faulty generator matrix
+
+###### RESOLVED ISSUES :
+	- [RESOLVED] The projection and plotting of polytopes is still bugged ...
+		+ Correct projection now (eliminated null vectors)
+
+	- [RESOLVED] Reachability analysis with rational function is false compared to simulations
+		+ Not the same result between the ginac sim and the C_function sim
+		+ was using n=6 instead of n=5 for Iron model in C_function...
+
+	- [RESOLVED] Some bugs with denom = 0 For the rational function Bernstein optimization.
+		+ No bug on the function given by Garloff in his paper ...
+		+ The bug was due to some polynomial not being in expanded form at some points of the computation [...]
+		+ [...] leadind to a bad computation of the monomials
+
+	- [RESOLVED] SegFault at iteration n°38768 in the build__equation function with the following options:
+		+ Bundles build with constraints: BOX & Fe -0.5*IRP
+		+ and offset : BOX + offp[5] = 1.0798325e-08 & offm[5] = -1.0648325e-8
+		+ FIXED PARAMETERS
+		+ BSPT 
+		+ Explicit
+		+ AFO
+			---> Could be in the get_place function ?
+			---> {Solution} Set out of state space: added flag to add a clean stop to the computation
+
+	- [RESOLVED] Segfault in the .info file printing function
+	 	+ if(sim_engine == NULL) oublié
+
+###### MISSING IMPLEMENTATION :
+
+	- ADDING the corresponding function for the BOX and PARALLELOTOPE type
+		+ not prioritized since the Bundle can represent both
+		+ BOX must be done first (better performance)
+
+	- RE-WRITTING the bernstein error control function
+		+ I must calculate the Hessian of the Ci*f°g fonction ? or the fonction f is enough ?
+		+ need to optimize the previsous implemntation of the bern coeff re-computation in case of splitting
+
+	- Splitting the BUNDLE
+		+ Depends of the reason => equivalent to just adding a separation constraint ?
+
+	- After the poor/ and quite random results of the pca algorithm is the ICA a good research pist ?
+
+	- BSPT construction is quite complex
+		+ Need to use PARMA POLYHEDRA LIBRARY for simpler description and faster implementation
+		+ PPL risk to conflict with the current Polyhedron implmentation
+		+ PPL can fasten the reachability algorithm ?
+
+	- The handling of the approximation when a set cross a border (BSPT) is AWFUL
+		+ Need a more complex handling of frontier crossing with splitting and clusterring
+		+  OR Need a method with local approximation around a frontier
+
+	- IMPLICIT BERNSTEIN CONTROL POINT AND MONOTONICITY is partially implemented
+		+ Some key algorithm are not implemented like the Domination, and the orthant
+		+ The monotonicity algorithm conflict with the parameters in the general case
+		+ The current implentation has been tested and is correct on the tested examples but could it be faster ?
+
+	- FILEMANAGER need to be updated 
+		+ This can be done last ...
+
+###### MISSING DOCUMENTATION :
+
+	- COMMENTING the code need to be done
+		+ There are comments in the main files
+		+ The comments are not useful for a Doxygen documentation
+		+ This is need but since the code change every month this can be done when some structure are fixed
+
+	- TEST section
+		+ Few test has been done on the following methods but the results (neither the code) has been archived
+			-> Equation (test_implicit.cpp has a few test corresponding to Arew Paul Smith thesis)
+			-> BSPT as been tested but the test has been deleted (not easy to read, and not stardard)
+			-> BERNSTEIN_REACH has been test on T.Dreossi models with the same method when possible
+			-> For the new methods there is no way to know if the result are correct or not
+			-> NEED proof reading by a THIRD person
+
+		+ A test file for the IRON MODEL is in preparation
+		+ The number of iteration will not be the full time (for performance purpose)
+			-> At most 45,000 iteration or a 10h of computation (full would be 172800 iterations)		
+		+ It will cover the following case:
+			* WITH BSPT
+				X WITH IMPLICIT METHOD
+					O WITH FIXED PARAMETERS
+						-> one BOX
+						-> one DYNAMIC PARALLELOTOPE
+						-> one BOX & one DYNAMIC PARALLELOTOPE FULL
+						-> one BOX & one DYNAMIC PARALLELOTOPE PARTIAL on FE,IRP,Ft
+						-> With a chosen STATIC BUNDLE
+					O WITH VARIABLE PARAMETERS (AT least one)
+						-> one BOX
+						-> one DYNAMIC PARALLELOTOPE FULL ===> Too slow (1282 monomials is too much for not optimized code)
+						-> one BOX & one DYNAMIC PARALLELOTOPE FULLL ===> Too slow
+						-> one BOX & one DYNAMIC PARALLELOTOPE PARTIAL on FE,IRP,FtL ===> Too slow
+						-> With a chosen STATIC BUNDLE
+				X WITH EXPLICIT METHOD
+					O WITH FIXED PARAMETERS
+						-> one BOX
+						-> one DYNAMIC PARALLELOTOPE
+						-> one BOX & one DYNAMIC PARALLELOTOPE FULL
+						-> one BOX & one DYNAMIC PARALLELOTOPE PARTIAL on FE,IRP,Ft
+						-> With a chosen STATIC BUNDLE
+					O WITH VARIABLE PARAMETERS (AT least one)
+						-> one BOX
+						-> one DYNAMIC PARALLELOTOPE
+						-> one BOX & one DYNAMIC PARALLELOTOPE FULL
+						-> one BOX & one DYNAMIC PARALLELOTOPE PARTIAL on FE,IRP,Ft
+						-> With a chosen STATIC BUNDLE		
+			* WITH NO BSPT
+				X WITH IMPLICIT METHOD
+					O WITH FIXED PARAMETERS
+						-> one BOX
+					O WITH VARIABLE PARAMETERS (AT least one)
+						-> one BOX
+
+
+		+ TOTAL ~ 5*2*2 + 2  ~ 22 TESTS ===> AT least 1 week of computation if no error
+
+		 
+				
