@@ -13,7 +13,7 @@ SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 CFLAGS := -g -std=c++11# -Wall
 LIB :=  -lcln -lginac -lglpk -lm
-INC := -I include -include/usr/include/boost/property_tree/ptree.hpp -include/usr/include/boost/property_tree/ini_parser.hpp
+INC := -I include -include/usr/include/boost/property_tree/ptree.hpp -include/usr/include/boost/property_tree/ini_parser.hpp -include/usr/include/boost/lexical_cast.hpp
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."
