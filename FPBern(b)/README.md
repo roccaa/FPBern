@@ -52,8 +52,8 @@ To run a set of benchmarks (and any further tests), launch the command (on Matla
 
 Then to lauch the benchmarks:
 
- 	  `$ do_all;`
-    `$ result`
+ 	$ do_all;
+	$ result
     
 
 
