@@ -24,7 +24,7 @@ FPBern(a) handles input files with .ini extension (this is mandatory) with the f
 
  + OPTIONS
 - name = `name of the program`
-- epsilon = `machine precision as 2^(-epsilon)`
+- precision = `machine precision as 2^(-precision)`
 - nbvars = `dimension of x`
 - nberrors = `dimension of e`
  + Programs
@@ -54,16 +54,17 @@ or by downloading the ZIP archive at https://github.com/roccaa/FPBern.git
 ###Installation
 To install from the source type:
 
-$ make
+	$ make
+
 This creates a binary called FPBern in /bin
 
 To run FPBern, move to /bin and launch the binary with the command:
 
-$ ./FPBern file_name1 file_name2 ...    (without the .ini)
+	$ ./FPBern file_name1 file_name2 ...    (without the .ini)
 
 To run a set of benchmarks, launch the command
 
- ./FPBern rigidbody1 rigidbody2 kepler0 kepler1 kepler2 sineTaylor sineOrder3 sqroot himmilbeau
+ 	$ ./FPBern rigidbody1 rigidbody2 kepler0 kepler1 kepler2 sineTaylor sineOrder3 sqroot himmilbeau
 
 
 
