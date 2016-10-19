@@ -23,15 +23,7 @@
 
 
 #include <ginac/ginac.h>
-#include <armadillo>
 #include <boost/lexical_cast.hpp>
-
-#include 	<boost/scoped_ptr.hpp> 	//Simple sole ownership of single objects. Noncopyable.
-#include  	<boost/scoped_array.hpp> 	//Simple sole ownership of arrays. Noncopyable.
-#include  	<boost/shared_ptr.hpp> 	//Object ownership shared among multiple pointers.
-#include 	<boost/shared_array.hpp> 	//Array ownership shared among multiple pointers.
-#include 	<boost/weak_ptr.hpp> 	//Non-owning observers of an object owned by shared_ptr.
-#include  	<boost/intrusive_ptr.hpp> //Shared ownership of objects with an embedded reference count.
 
 //#define epsilon 1e-30
 
@@ -237,18 +229,18 @@ inline intVector index_to_mindex(int index, intVector shift_table)
 
 }
 
-inline arma::Mat<double> normalize_row(arma::Mat<double> m)
-{
-	arma::Mat<double> res = m;
-	cout << "in normalize_row:\n";
-	for(int i=0;i<m.n_rows;i++)
-	{
-		cout << "norm = " << norm(res.row(i),2) <<"\n";
-		res.row(i) = res.row(i)/norm(res.row(i),2);
-	}
-	//res.print();
-	return res;
-}
+//inline arma::Mat<double> normalize_row(arma::Mat<double> m)
+//{
+//	arma::Mat<double> res = m;
+//	cout << "in normalize_row:\n";
+//	for(int i=0;i<m.n_rows;i++)
+//	{
+//		cout << "norm = " << norm(res.row(i),2) <<"\n";
+//		res.row(i) = res.row(i)/norm(res.row(i),2);
+//	}
+//	//res.print();
+//	return res;
+//}
 
 inline double **mat_create(int rows, int cols)
 {
@@ -261,57 +253,57 @@ inline double **mat_create(int rows, int cols)
 	return M;
 }
 
-inline double ** arma_to_Cmat(arma::Mat<double>* arma_m)
-{
+//inline double ** arma_to_Cmat(arma::Mat<double>* arma_m)
+//{
+//
+//	int rows = arma_m->n_cols;
+//	int cols = arma_m->n_rows;
+//	double **M;
+//
+//	M = (double**) malloc(rows * sizeof(double*));
+//	for (int i=0; i<rows; i++)
+//		M[i] = (double*) malloc(cols * sizeof(double));
+//
+//	for(int i=0; i<rows; i++)
+//	{
+//		for (int j=0; j<cols; j++)
+//		{
+//			M[i][j] = arma_m->at(j,i);
+//		}
+//	}
+//
+//	return M;
+//}
 
-	int rows = arma_m->n_cols;
-	int cols = arma_m->n_rows;
-	double **M;
 
-	M = (double**) malloc(rows * sizeof(double*));
-	for (int i=0; i<rows; i++)
-		M[i] = (double*) malloc(cols * sizeof(double));
+//inline vector_matrix arma2std_Mat(arma::mat arma_m)
+//{
+//	assert(arma_m.n_elem != 0);
+//	vector_matrix res;
+//	for(int i=0;i<arma_m.n_rows;i++)
+//	{
+//		doubleVector r = doubleVector(arma_m.n_cols);
+//		for(int j=0;j<arma_m.n_cols;j++)
+//		{
+//			r[j] = arma_m(i,j);
+//		}
+//		res.push_back(r);
+//	}
+//	return res;
+//}
 
-	for(int i=0; i<rows; i++)
-	{
-		for (int j=0; j<cols; j++)
-		{
-			M[i][j] = arma_m->at(j,i);
-		}
-	}
-
-	return M;
-}
-
-
-inline vector_matrix arma2std_Mat(arma::mat arma_m)
-{
-	assert(arma_m.n_elem != 0);
-	vector_matrix res;
-	for(int i=0;i<arma_m.n_rows;i++)
-	{
-		doubleVector r = doubleVector(arma_m.n_cols);
-		for(int j=0;j<arma_m.n_cols;j++)
-		{
-			r[j] = arma_m(i,j);
-		}
-		res.push_back(r);
-	}
-	return res;
-}
-
-inline arma::Mat<double> std2arma_Mat(vector_matrix vect_m)
-{
-	assert(vect_m.size() != 0);
-	arma::Mat<double> res = arma::Mat<double>(vect_m.size(),vect_m[0].size());
-	for(int i=0;i<vect_m.size();i++)
-	{
-		arma::Row<double> r = arma::Row<double>(vect_m[i]);
-		res.row(i) = r;
-
-	}
-	return res;
-}
+//inline arma::Mat<double> std2arma_Mat(vector_matrix vect_m)
+//{
+//	assert(vect_m.size() != 0);
+//	arma::Mat<double> res = arma::Mat<double>(vect_m.size(),vect_m[0].size());
+//	for(int i=0;i<vect_m.size();i++)
+//	{
+//		arma::Row<double> r = arma::Row<double>(vect_m[i]);
+//		res.row(i) = r;
+//
+//	}
+//	return res;
+//}
 
 
 inline bool operator==(doubleVector a, doubleVector b)
@@ -390,29 +382,29 @@ inline string read_string(string *input,string sep)
 	return res;
 }
 
-inline double compute_angle(doubleVector d1,doubleVector d2)
-{
-	arma::vec a = arma::vec(d1);
-	arma::vec b = arma::vec(d2);
-	double s = arma::norm_dot(a,b);
+//inline double compute_angle(doubleVector d1,doubleVector d2)
+//{
+//	arma::vec a = arma::vec(d1);
+//	arma::vec b = arma::vec(d2);
+//	double s = arma::norm_dot(a,b);
+//
+//	return acos(s);
+//}
 
-	return acos(s);
-}
-
-inline vector<double> compute_listAngles(vector<doubleVector> list_directions)
-{
-	doubleVector list_angles;
-	for(int i=0;i<list_directions.size();i++)
-	{
-		for(int j=0;j<list_directions.size();j++)
-		{
-			double alpha = compute_angle(list_directions[i],list_directions[j]);
-			list_angles.push_back(alpha);
-		}
-	}
-
-	return list_angles;
-}
+//inline vector<double> compute_listAngles(vector<doubleVector> list_directions)
+//{
+//	doubleVector list_angles;
+//	for(int i=0;i<list_directions.size();i++)
+//	{
+//		for(int j=0;j<list_directions.size();j++)
+//		{
+//			double alpha = compute_angle(list_directions[i],list_directions[j]);
+//			list_angles.push_back(alpha);
+//		}
+//	}
+//
+//	return list_angles;
+//}
 
 inline vector<double> * copy(vector<double> * a){
 	vector<double> * b = new vector<double>(a->size(),0);

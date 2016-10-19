@@ -1,6 +1,6 @@
 function [bmax,bmin] = bernstein_method_polynomial(pi,params,vars,X)
     % epsilon machine   
-    epsilon = 1; % 2^(-24) pour le flottant % previsously 2^(-53)
+    epsilon = 2^(-53); % 2^(-24) pour le flottant % previsously 2^(-53)
 
     % Normalization of pi
     normalized_pi = normalized(pi,vars,X);
@@ -10,7 +10,6 @@ function [bmax,bmin] = bernstein_method_polynomial(pi,params,vars,X)
 
     % Compute Bernstein coefficients (with matrix method)
     bern_coeffs = mat_contr_pts(exps,coeffs,'r');
-    bern_coeffs
     disp('Bernstein Coeff Computation over.');
     disp('Load...');
     

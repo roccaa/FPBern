@@ -40,7 +40,7 @@ FPBern(a) was tested on Ubuntu 14.04 LTS.
 Moreover, FPBern(a) relies on three external libraries:
 - GiNaC (GiNaC is Not a CAS), for the symbolic manipulation of polynomials
 - GLPK (GNU Linear Programming Kit), for solving linear programming problems
-- boost (boost/property_tree/ptree.hpp and boost/property_tree/ini_parser.hpp)
+- boost (boost/property_tree/ptree.hpp and boost/property_tree/ini_parser.hpp and boost/lexical_cast.hpp)
 
 ###Download
 FPBern(a) is maintained as a GitHub repository at the address https://github.com/roccaa/FPBern.git

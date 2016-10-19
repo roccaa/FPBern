@@ -12,7 +12,7 @@ SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 CFLAGS := -g -std=c++11# -Wall
-LIB :=  -Bstatic -lcln -lginac -lglpk -lm -larmadillo -BStatic
+LIB :=  -lcln -lginac -lglpk -lm
 INC := -I include -include/usr/include/boost/property_tree/ptree.hpp -include/usr/include/boost/property_tree/ini_parser.hpp
 
 $(TARGET): $(OBJECTS)

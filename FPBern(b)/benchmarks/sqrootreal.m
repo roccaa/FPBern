@@ -1,6 +1,6 @@
 
 % Time
-tic
+
 % Declare variables, parameters, and polynomial
 syms x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16;
 
@@ -8,13 +8,13 @@ pi = (((( (-5/32) * x2 + ( (-1/32) * x5 + ( (-5/128) * x12 + ( (-5/128) * x13 + 
 params = [x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16];
 vars = [x1];
 X = [0,1];
-
+tic
 [bmax,bmin] = bernstein_method(pi,params,vars,X,'polynomial');
-
+time = toc
 disp(' ');
 disp('The Result of Bernstein Computation of sqroot is :');
 disp(' ');
 disp('bmax=');disp(bmax);
 disp('bmin=');disp(bmin);
-toc
+res = max(abs(bmin),abs(bmax));
 disp(' ');

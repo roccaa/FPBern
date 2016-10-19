@@ -1,6 +1,6 @@
 
 % Time
-tic
+
 % Declare variables, parameters, and polynomial
 syms x1 x2 x3 x4 x5 x6 x7;
 
@@ -8,14 +8,14 @@ pi = ((( (-5120184131/10000000000) * x2 + ( (-1290061377/10000000000) * x4 + ( (
 params = [x2 x3 x4 x5 x6 x7];
 vars = [x1];
 X = [-2,2];
-
+tic
 [bmax,bmin] = bernstein_method(pi,params,vars,X,'polynomial');
-
+time = toc
 disp(' ');
 disp('The Result of Bernstein Computation of sineOrder3 is :');
 disp(' ');
 disp('bmax=');disp(bmax);
 disp('bmin=');disp(bmin);
-toc
+res = max(abs(bmin),abs(bmax));
 disp(' ');
 
