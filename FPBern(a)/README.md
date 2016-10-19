@@ -24,7 +24,7 @@ FPBern(a) handles input files with .ini extension (this is mandatory) with the f
 
  + OPTIONS
 - name = `name of the program`
-- epsilon = `machine precision as 2^(-epsilon)`
+- precision = `machine precision as 2^(-precision)`
 - nbvars = `dimension of x`
 - nberrors = `dimension of e`
  + Programs
