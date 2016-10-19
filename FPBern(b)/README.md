@@ -22,10 +22,10 @@ ex: x1 = [-1 1] and x2 = [-2 2]
 ###Programs representation
 FPBern(b) is use in Matlab script files:
 
-- Declare all variables symbols with `syms` from `Symbolic Toolbox`
+- Declare all variables `(x,e)` symbols with `syms` from `Symbolic Toolbox`
 - Define `l`, the l(x,e) polynomial
-- Define `vars`, the variable as an array of the previsously declared symbols
-- Define `params`, the parameters in the same way
+- Define `vars`, the variable `x` as an array of the previsously declared symbols
+- Define `params`, the errors terms `e` in the same way
 - Define `X`, the input as a box: ex `X = [-5,5,-5,5];` means 1st variable in in `[-5,5]` as well as the second variables.
 - call [bmax,bmin] = bernstein_method(l,params,vars,X,'polynomial') to compute the lower and the upper bounds of l(x,e).
 
