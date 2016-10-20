@@ -2,7 +2,7 @@
 ## Description
 `FPBern(b)` is a tool for computation of roundoff error bounds using Bernstein expansion.
 
-If the roundoff error of a polynomial f(x)  is given by r(x,e) s.t.:
+If the roundoff error of a program implementing a polynomail function f(x)  is given by r(x,e) s.t.:
 
 			r(x,e) = l(x,e)+h(x,e)
 
