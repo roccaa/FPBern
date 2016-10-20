@@ -36,7 +36,7 @@ FPBern(b) is implemented in Matlab2015a, thus it is not guaranteed it will work 
 Moreover, FPBern(b) relies on a module of Matlab:
 - `Matlab symbolic toolbox`
 
-###Download
+### Download
 FPBern(b) is maintained as a GitHub repository at the address https://github.com/roccaa/FPBern.git
 
 It can be obtained either by typing the shell command:
