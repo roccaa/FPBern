@@ -12,7 +12,7 @@ with l(x, e) the part of r(x, e) linear w.r.t. e and h(x, e) the part  of r(x, e
 
 For instance, one can consider f(x) = x1^3 + (3/4) x1 x2^2, with x1 in [-1, 1] and x2 in [-2, 2].
 
-###Programs representation
+###Program representation
 FPBern(a) handles input files with .ini extension (mandatory) with the following structure:
 
  + OPTIONS
@@ -38,7 +38,7 @@ Moreover, FPBern(a) relies on three external libraries:
 ###Download
 FPBern(a) is maintained as a GitHub repository at the address https://github.com/roccaa/FPBern.git
 
-It can be obtained either by typing the following command:
+It can be obtained by typing the following command:
 
 $ git clone https://github.com/roccaa/FPBern.git
 
