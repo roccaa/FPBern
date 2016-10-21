@@ -33,7 +33,7 @@ int main(int argc,char** argv){
 	    boost::property_tree::ini_parser::read_ini((file+".ini"), pt);
 	   // cout << "Begin reading\n";
 	    string name =  pt.get<string>("OPTIONS.name");
-	    int exp = pt.get<int>("OPTIONS.epsilon");
+	    int exp = pt.get<int>("OPTIONS.precision");
 	    double err = std::pow(2,-exp);
 	    //cout << "err = " << err << endl;
 	    int dim_vars = pt.get<int>("OPTIONS.nbvars");
