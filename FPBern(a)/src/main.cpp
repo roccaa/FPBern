@@ -58,15 +58,15 @@ int main(int argc,char** argv){
 	    parser reader(table_symbols);
 	    ex p = reader(p_string);
 	    p = p.expand();
-	   //cout << p << endl;
+	    //cout << p << endl;
 
 	    string separateur = ",";
 	    string string_bl = pt.get<string>("PROGRAM.input_bl");
 	    doubleVector bl = read_doubleVector(&string_bl,separateur,dim_vars);
-//	    cout << bl;
+	    //cout << bl;
 	    string string_bu = pt.get<string>("PROGRAM.input_bu");
 	    doubleVector bu = read_doubleVector(&string_bu,separateur,dim_vars	);
-//	    cout << bu;
+	    //cout << bu;
 
 	    vector<double> pAj (params.nops(),0);
 		vector< vector<double> > pA (2*params.nops(),pAj);
@@ -118,6 +118,7 @@ int main(int argc,char** argv){
 	    //cout << "done\n";
 
 	    // Computing f°g
+		//cout << "Computing f°g\n";
 		lst generator_function = para.getGeneratorFunction();
 
 		lst sub;
@@ -125,15 +126,32 @@ int main(int argc,char** argv){
 		for(int i=0; i<(signed)generator_function.nops(); i++){
 			sub.append(vars[i] == generator_function[i]);
 		}
+		//cout << "Ready for substitution in p\n";
+		//cout << "subs = \n" << sub << endl;
 		fog = p.subs(sub,subs_options::no_pattern);
 
-		Equation* eq_p = new Equation(	dim_vars, as, params, fog, EXPLICIT_SYM, qs, bs);
+		lst subs_map;
+		for(int i=0;i<pv.lenghts.size();i++){
+			subs_map.append(qs[i] == pv.base_vertex[i]);
+			subs_map.append(bs[i] == pv.lenghts[i]);
+		}
+		//cout << "subs_map = \n" << subs_map << endl;
+		fog =  fog.subs(subs_map,subs_options::no_pattern);
 
+		fog =  fog.expand();
+		//cout << "New program:\n" << fog << endl;
+		//cout << "Variable change done -- Creating Equation\n";
 		clock_t tStart = clock();
-		pair<double,double>  res_explicit = eq_p->optimize(&para,&paramSet);
-		double time = (double)(clock() - tStart)/CLOCKS_PER_SEC;
+		Equation* eq_p = new Equation(	dim_vars, as, params, fog, EXPLICIT_SYM, qs, bs);
+		//Equation* eq_p = new Equation(	dim_vars, as, params, p, EXPLICIT_SYM, qs, bs);
+		double time1 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
+		//cout << "Equation Creation Done -- optimizing Equation\n";
+		//pair<double,double>  res_explicit = eq_p->optimize(&para,&paramSet);
+		pair<double,double>  res_explicit = eq_p->optimize(NULL,&paramSet);
+		double time2 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
 		cout << "##### " << name << " #####\n";
-		cout << "Time method explicit Parallelotopes: " << time << endl;
+		cout << "Time Compute BernsteinCoeffs: " << time1 << endl;
+		cout << "Total Time: " << time2 << endl;
 		//cout << "Result from optimization of: \n" << p << endl;
 		//cout << "min = " << -1*res_explicit.first*err << endl;
 		//cout << "max = " << res_explicit.second*err << endl;

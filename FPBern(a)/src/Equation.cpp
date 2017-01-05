@@ -64,6 +64,8 @@ void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex 
 			}
 		}
 		this->varAssociationTable.push_back(varTable);
+		//cout << "In equation Constructor\n";
+		//cout << "the variables are " << tempVars << endl;
 		BaseConverter bc = BaseConverter(tempVars,tempEq);
 		if(tempVars.nops()>1)
 		{
@@ -74,6 +76,7 @@ void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex 
 			this->explicitBC_coeff = bc.getBernCoeffs();
 		}
 		assert(this->varAssociationTable.size() == 1);
+		//cout << "Number of bernstein coeff: " << this->explicitBC_coeff.nops() << endl; 		
 	}
 	else{
 		cout << " \n ####### WARNING !! ####\n /!\ Execution terminating !\n";
@@ -126,6 +129,44 @@ pair<double,double> Equation::optimize(Parallelotope *set, LinearSystemSet *para
 	return res;
 }
 
+double abs_sum(ex p)
+{
+	ex poly = p.expand();
+	int nbmonome = poly.nops();
+	double sum = 0;
+	//ex exsum = 0;
+	for(int i=0;i<nbmonome;i++)
+	{
+		ex m = poly.op(i);
+		if(m.nops() < 2)
+		{
+			if( is_a<numeric>( (m) ) )
+			{
+				sum = sum + abs(ex_to<numeric>((m)).to_double());
+				//exsum = exsum + abs(poly.op(i));
+			}
+			else
+			{
+				sum = sum + 1;
+				//exsum = exsum + 1;
+			}
+		}
+		else
+		{
+			sum = sum + abs(ex_to<numeric>((m).op(1)).to_double());
+			//exsum = exsum + abs((poly.op(i)).op(1));
+		}
+
+	}
+
+	//cout << "exsum = " << ex_to<numeric>(exsum).to_double() << endl;
+	//cout << "sum = " << sum << endl;
+	//assert(0);
+	return sum;
+	//return ex_to<numeric>(exsum).to_double();
+}
+
+
 bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *paramSet)
 {
 	bern_info result;
@@ -148,11 +189,12 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 			subs_map.append(this->base_vars[i] == p.base_vertex[i]);
 			subs_map.append(this->ampl_vars[i] == p.lenghts[i]);
 		}
-		//cout << "subs_map = \n" << subs_map << endl;
+		cout << "subs_map = \n" << subs_map << endl;
 		type = set->type;
 	}
-	else
-		type = BOX;
+	type = PARALLELOTOPE;
+	//else
+	//	type = BOX;
 
 
 	double maximum;
@@ -178,17 +220,32 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 			break;
 		default:
 			maximum = -INFINITY;
-			minimum = -INFINITY;
-			for(int j=0; j<coeffs_symb.nops();j++)
+			minimum = INFINITY; // -INFINITY
+			int nbcoeff = coeffs_symb.nops();
+			//cout << " In optimize function\n";
+			//cout << "Number of bernstein coeff = " << nbcoeff << endl;
+			//for(int j=0; j<coeffs_symb.nops();j++)
+			double sum;  
+			for(int j=0; j<nbcoeff;j++)
 			{
-				coeffs_symb[j] = coeffs_symb[j].subs(subs_map,subs_options::no_pattern);
-				result.coeff_max->at(j) = optimize_max(coeffs_symb[j],paramSet,this->params);
-				result.coeff_min->at(j) = optimize_max(-coeffs_symb[j],paramSet,this->params);
-
-				minimum  = max(result.coeff_min->at(j),minimum);
-				maximum  = max(result.coeff_max->at(j),maximum);
+				//cout << "substitution\n";
+				//coeffs_symb[j] = coeffs_symb[j].subs(subs_map,subs_options::no_pattern);
+				//cout << "Linear optimization\n"; 
+				//cout << "the current coeff is:\n";
+				//cout << coeffs_symb[j] << endl;
+				//cout << "The parameters are: \n";
+				//cout << this->params << endl;
+				//result.coeff_max->at(j) = optimize_max(coeffs_symb[j],paramSet,this->params);
+				//result.coeff_min->at(j) = optimize_max(-coeffs_symb[j],paramSet,this->params);
+				//minimum  = max(result.coeff_min->at(j),minimum);
+				//maximum  = max(result.coeff_max->at(j),maximum);
+				sum = abs_sum(coeffs_symb[j]);
+				minimum  = min(-sum,minimum);
+				maximum  = max(sum,maximum);
+				
+				
 			}
-
+			//cout << "done\n";
 			result.min = minimum;
 			result.max = maximum;
 			break;
