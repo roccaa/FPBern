@@ -23,6 +23,7 @@ function [ bmax,bmin ] = matrix_max_min( bern_coeffs, params )
         expr = bern_coeffs(k);
         [c,t] = coeffs(expr,params); % c is the set of coefficient
                                      % we must take the abs sum
+
         current_max = sum(abs(c));
         current_min = -current_max;
 %         if isa(t(1),'double') % case where there is a lonely integer
@@ -36,8 +37,8 @@ function [ bmax,bmin ] = matrix_max_min( bern_coeffs, params )
         if(isempty(c))
             current_min = 0;
             current_max = 0;
-         end
-    
+        end
+
         if current_min < bmin
             imin = k;
             bmin = current_min;
