@@ -18,6 +18,7 @@ function [ bmax,bmin ] = matrix_max_min( bern_coeffs, params )
     %end
     current = 0;
     imax = 1;
+    %imin = 1;
 
     for k=2:length(bern_coeffs) % we go through bernstein coefficients
         expr = bern_coeffs(k);
@@ -52,4 +53,8 @@ function [ bmax,bmin ] = matrix_max_min( bern_coeffs, params )
     end
     disp('imax = ');
     disp(imax);
+    %disp(bern_coeffs(imax))
+    %disp('imin = ');
+    %disp(imin);
+    %disp(bern_coeffs(imax))
 end

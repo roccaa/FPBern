@@ -226,7 +226,8 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 			//cout << "Number of bernstein coeff = " << nbcoeff << endl;
 			//for(int j=0; j<coeffs_symb.nops();j++)
 			double sum;  
-			for(int j=0; j<nbcoeff;j++)
+			for (lst::const_iterator c = coeffs_symb.begin(); c != coeffs_symb.end(); ++c)
+			//for(int j=0; j<nbcoeff;j++)
 			{
 				//cout << "substitution\n";
 				//coeffs_symb[j] = coeffs_symb[j].subs(subs_map,subs_options::no_pattern);
@@ -239,7 +240,9 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 				//result.coeff_min->at(j) = optimize_max(-coeffs_symb[j],paramSet,this->params);
 				//minimum  = max(result.coeff_min->at(j),minimum);
 				//maximum  = max(result.coeff_max->at(j),maximum);
-				sum = abs_sum(coeffs_symb[j]);
+				
+				sum = abs_sum(*c);
+				//sum = abs_sum(coeffs_symb[j]);
 				minimum  = min(-sum,minimum);
 				maximum  = max(sum,maximum);
 				
