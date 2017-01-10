@@ -11,7 +11,7 @@ TARGET := bin/FPBern
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g -o3 -std=c++11# -Wall
+CFLAGS := -g -std=c++11# -Wall
 LIB :=  -lcln -lginac -lglpk -lm
 INC := -I include -include/usr/include/boost/property_tree/ptree.hpp -include/usr/include/boost/property_tree/ini_parser.hpp -include/usr/include/boost/lexical_cast.hpp
 
