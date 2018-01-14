@@ -128,6 +128,7 @@ int main(int argc,char** argv){
 	    boost::property_tree::ini_parser::read_ini((file+".ini"), pt);
 	   // cout << "Begin reading\n";
 	    string name =  pt.get<string>("OPTIONS.name");
+		cout << "##### " << name << " #####\n";
 	    int exp = pt.get<int>("OPTIONS.precision");
 	    double err = std::pow(2,-exp);
 	    //cout << "err = " << err << endl;
@@ -257,7 +258,6 @@ int main(int argc,char** argv){
 		pair<double,double>  res_explicit = eq_p->optimize(NULL,&paramSet);
 		//cout << "done!\n";
 		double time2 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
-		cout << "##### " << name << " #####\n";
 		cout << "Total Time: " << time2 << endl;
 		//cout << "Result from optimization of: \n" << p << endl;
 		//cout << "min = " << -1*res_explicit.first*err << endl;
