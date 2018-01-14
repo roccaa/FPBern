@@ -16,7 +16,7 @@ class Equation {
 
 public:
 	Equation();
-	Equation(int dim_global,lst vars, lst params, ex eq, bernstein_computation_method method_BC, lst q_s, lst beta_s);
+	Equation(int dim_global,lst vars, lst params, ex eq, bool rationnal, bernstein_computation_method method_BC, lst q_s, lst beta_s);
 	~Equation();
 
 	//TODO

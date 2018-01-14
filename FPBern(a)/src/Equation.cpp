@@ -12,6 +12,7 @@ Equation::Equation()
 {}
 
 Equation::Equation(	int dim_global, lst vars, lst params, ex eq,
+					bool rationnal,
 					bernstein_computation_method method_BC,
 					lst q_s, lst beta_s){
 	this->method = method_BC;
@@ -33,10 +34,10 @@ Equation::Equation(	int dim_global, lst vars, lst params, ex eq,
 			cout << "NO method for this tool"<<endl;
 			break;
 		case EXPLICIT_SYM:
-			constructor_explicit_sym(dim_global, vars, params, eq, false);
+			constructor_explicit_sym(dim_global, vars, params, eq, rationnal);
 			break;
 		default:
-			constructor_explicit_sym(dim_global, vars, params, eq, false);
+			constructor_explicit_sym(dim_global, vars, params, eq, rationnal);
 			break;
 	}
 }
@@ -48,15 +49,16 @@ void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex 
 	this->equationEx = eq;
 	this->vars = vars;
 	this->params = params;
-	ex tempEq = eq.expand();
+	//eq.normal();
 	lst tempVars;
 	intVector varTable;
 	this->type = Polynomial_ONLY;
 	if(!fully_rationnal){ // Just polynomial
+		
 		int tempDim = 0;
 		for(int k=0;k<vars.nops();k++)
 		{
-			if(tempEq.has(vars[k]))
+			if(eq.has(vars[k]))
 			{
 				tempVars.append(vars[k]);
 				tempDim++;
@@ -66,10 +68,15 @@ void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex 
 		this->varAssociationTable.push_back(varTable);
 		//cout << "In equation Constructor\n";
 		//cout << "the variables are " << tempVars << endl;
-		BaseConverter bc = BaseConverter(tempVars,tempEq);
+		BaseConverter bc = BaseConverter(tempVars,eq);
 		if(tempVars.nops()>1)
 		{
-			this->explicitBC_coeff = bc.getBernCoeffsMatrix();
+			if(true){
+				this->explicitBC_coeff = bc.getBernCoeffsMatrix();
+			}	
+			else{
+				this->explicitBC_coeff = bc.getBernCoeffs();
+			}	
 		}
 		else
 		{
@@ -79,12 +86,30 @@ void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex 
 		//cout << "Number of bernstein coeff: " << this->explicitBC_coeff.nops() << endl; 		
 	}
 	else{
-		cout << " \n ####### WARNING !! ####\n /!\ Execution terminating !\n";
-		cout << "====>>> Rationnal Function Cannot be computed with this method \n";
-		cout << "====>>> getBernCoeffsMatrix, and getBernCoeffs may not give the same number of coeff for numerator and denominator\n";
-		cout << "====>>> getBernCoeffsMatrix, and getBernCoeffs need a function to compute higher degrees bernstein decomposition\n";
-		assert(0);
+
+		//ex temp = eq.normal();
+		lst tempVars;
+		int tempDim = 0;
+		intVector varTable;
+		for(int k=0;k<vars.nops();k++){
+			if(eq.has(vars[k])){
+				tempVars.append(vars[k]);
+				tempDim++;
+				varTable.push_back(k);
+			}
+		}
+		if(varTable.size()!=0) this->varAssociationTable.push_back(varTable);
+		//cout << "computing numer denom\n"; 
+		clock_t tStart = clock();
+		ex nd = eq.numer_denom();
+		double time = (double)(clock() - tStart)/CLOCKS_PER_SEC;
+		cout << "[Numerator,Denominator] generation time in GINAC = " << time << endl;
+		BaseConverter bc = BaseConverter(tempVars,nd[0], nd[1]);
+		this->explicitBC_coeff = bc.getRationalBernCoeffs();
+		//cout << "Nb bernCoeffs = " << this->explicitBC_coeff.nops() << endl; 
 		this->type = RationalPolynomial_ONLY;
+
+		
 	}
 }
 
@@ -114,23 +139,12 @@ pair<double,double> Equation::optimize(Parallelotope *set, LinearSystemSet *para
 	delete(optimization.coeff_max);
 	delete(optimization.coeff_min);
 
-	if(this->use_guess && optimization.min_coeffs_guess != NULL)
-	{
-		delete(optimization.min_coeffs_guess);
-	}
-	if(this->type != RationalPolynomial_ONLY && method == IMPLICIT_SYM && optimization.max_coeffs_guess != NULL)
-		delete(optimization.max_coeffs_guess);
-	if(this->type == RationalPolynomial_ONLY && optimization.coeff_numer != NULL)
-	{
-		delete(optimization.coeff_numer);
-		delete(optimization.coeff_denom);
-	}
-
 	return res;
 }
 
 double abs_sum(ex p)
 {
+	//cout << "in abs_sum func \n"; 
 	ex poly = p.expand();
 	int nbmonome = poly.nops();
 	double sum = 0;
@@ -159,7 +173,7 @@ double abs_sum(ex p)
 
 	}
 
-	//cout << "exsum = " << ex_to<numeric>(exsum).to_double() << endl;
+    //cout << "exsum = " << ex_to<numeric>(exsum).to_double() << endl;
 	//cout << "sum = " << sum << endl;
 	//assert(0);
 	return sum;
@@ -172,6 +186,7 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 	bern_info result;
 
 	lst coeffs_symb = this->explicitBC_coeff;
+	//cout << "BC symb = \n " << coeffs_symb << "\n";
 	result.partial = false;
 	result.method = method;
 
@@ -189,7 +204,7 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 			subs_map.append(this->base_vars[i] == p.base_vertex[i]);
 			subs_map.append(this->ampl_vars[i] == p.lenghts[i]);
 		}
-		cout << "subs_map = \n" << subs_map << endl;
+		//cout << "subs_map = \n" << subs_map << endl;
 		type = set->type;
 	}
 	type = PARALLELOTOPE;
@@ -199,7 +214,7 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 
 	double maximum;
 	double minimum;
-	// Remainder-----> Do not Handle rational function with this method !
+	
 	switch(type)
 	{
 		case BOX: // Box only the UnitBox --> Non-Unit Box not Handled
@@ -233,7 +248,7 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 				//coeffs_symb[j] = coeffs_symb[j].subs(subs_map,subs_options::no_pattern);
 				//cout << "Linear optimization\n"; 
 				//cout << "the current coeff is:\n";
-				//cout << coeffs_symb[j] << endl;
+				//cout << (*c) << endl;
 				//cout << "The parameters are: \n";
 				//cout << this->params << endl;
 				//result.coeff_max->at(j) = optimize_max(coeffs_symb[j],paramSet,this->params);
@@ -245,7 +260,9 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 				//sum = abs_sum(coeffs_symb[j]);
 				minimum  = min(-sum,minimum);
 				maximum  = max(sum,maximum);
-				
+				//cout  <<"minimum = " << minimum <<"\n";
+				//cout << "maximum = " << maximum << "\n";
+				//cout<< "#######\n\n";
 				
 			}
 			//cout << "done\n";

@@ -19,6 +19,101 @@ using namespace std;
 
 int main(int argc,char** argv){
 
+
+////////////////////////////////////////////////////////////////////////////// 
+/*
+	clock_t tStart = clock();	
+	possymbol   x1("x1"), x2("x2"), x3("x3"), x4("x4");
+	lst vars;
+	vars = x1,x2;
+	lst params;
+	params = x3,x4;
+
+	ex eq = ((3*pow(x1,2)/5)+x2)/((5*x1)/3+pow(x2,2)+2)*x3 + (x1/(2+x2))*x4;
+	//ex eq = (3*pow(x1,2)/5+x2)*x3 + (x1)*x4;
+	eq.expand();
+
+	vector<double> pAi (params.nops(),0);
+	vector< vector<double> > pA (2*params.nops(),pAi);
+	vector<double> pb (2*params.nops(),0);
+	// left constraint .... <= g(x) --> -g(x) <= -....
+	for(int i=0;i<2*params.nops();i++)
+	{
+		if(i<(params.nops()))
+			pA[i][i] = -1;
+		else
+			pA[i][i-(params.nops())] = 1;
+
+		pb[i] = 1;
+	}
+	LinearSystem *parameters = new LinearSystem(pA,pb);
+	LinearSystemSet *paramSet = new LinearSystemSet(parameters);
+	int dim_global = 2	;
+
+	// Calcul with parallelotope description (here a [0;1] box)
+	// DEFINITION Of the parallelotopes
+	possymbol q1("q1"), q2("q2"), q3("q3"), q4("q4"), q5("q5"), q6("q6"), q7("q7");
+	possymbol a1("a1"), a2("a2"), a3("a3"), a4("a4"), a5("q5"), a6("q6"), a7("q7");
+	possymbol b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("q5"), b6("q6"), b7("q7");
+	lst qs,as,bs; // Symbolic variables for linear transformation
+	qs = q1,q2;
+	as = a1,a2;
+	bs = b1,b2;
+	vector<lst> set_vars;
+	set_vars.push_back(qs);
+	set_vars.push_back(as);
+	set_vars.push_back(bs);
+	doubleVector row = doubleVector(2,0);
+	vector<doubleVector> u= vector<doubleVector>(2,row);
+	u[0][0] = 1;
+	u[1][1] = 1;
+	Parallelotope* para = new Parallelotope(set_vars,u);
+	doubleVector bV = {1,1};
+	doubleVector ampl = {2,2};
+
+	poly_values p;
+	p.base_vertex = bV;
+	p.versors = u;
+	p.lenghts = ampl;
+	para->add_polyValues(p);
+	
+	cout << "Init set built\n";
+
+	// Computing f°g
+	lst generator_function = para->getGeneratorFunction();
+	cout << "Getting Generator functions\n";
+	lst sub;
+	ex fog;
+	for(int i=0; i<(signed)generator_function.nops(); i++){
+		sub.append(vars[i] == generator_function[i]);
+	}
+	fog = eq.subs(sub,subs_options::no_pattern);
+	lst subs_map;
+	for(int i=0;i<p.lenghts.size();i++){
+		subs_map.append(qs[i] == p.base_vertex[i]);
+		subs_map.append(bs[i] == p.lenghts[i]);
+	}
+	//cout << "subs_map = \n" << subs_map << endl;
+	fog =  fog.subs(subs_map,subs_options::no_pattern);
+	fog =  fog.expand();
+
+	cout << "Composition with generator\n";
+	bool rational = true;
+	Equation* eq_p = new Equation(dim_global, as, params, fog, rational, EXPLICIT_SYM, qs, bs);
+	cout << "Equation created:\n";
+	cout << fog << " \n" ;
+	tStart = clock();
+	cout << "Opti\n";
+	pair<double,double>  res_explicit = eq_p->optimize(para,paramSet);
+	cout << "Time method explicit Parallelotopes: " << (double)(clock() - tStart)/CLOCKS_PER_SEC << endl;
+	cout << "Result from optimization of: \n" << eq << endl;
+	cout << "min = " << -1*res_explicit.first << endl;
+	cout << "max = " << res_explicit.second << endl;
+	
+	cout << "segfault ?" << endl;
+    //assert(0);
+*/
+ /////////////////////////////////////////////////////////////////////////////////  
 	if(argc == 1)
 	{
 		cout << " No input files -- please give a .ini input file with a polynomial program to start\n";
@@ -57,7 +152,13 @@ int main(int argc,char** argv){
 	    //cout << p_string << endl;
 	    parser reader(table_symbols);
 	    ex p = reader(p_string);
-	    p = p.expand();
+		bool rational = false;
+		if(p.denom() != 1){
+			rational = true;
+		}
+		else
+			p = p.expand();
+		
 	    //cout << p << endl;
 
 	    string separateur = ",";
@@ -130,6 +231,7 @@ int main(int argc,char** argv){
 		//cout << "subs = \n" << sub << endl;
 		fog = p.subs(sub,subs_options::no_pattern);
 
+		
 		lst subs_map;
 		for(int i=0;i<pv.lenghts.size();i++){
 			subs_map.append(qs[i] == pv.base_vertex[i]);
@@ -137,20 +239,25 @@ int main(int argc,char** argv){
 		}
 		//cout << "subs_map = \n" << subs_map << endl;
 		fog =  fog.subs(subs_map,subs_options::no_pattern);
-
+		//assert(0);
 		fog =  fog.expand();
+		//cout << fog << "\n";
+		//cout << "######\n";
+		//cout << fog.numer() << "\n";
+		//cout << "######\n";
+ 		//cout << fog.denom() << "\n";
+		
 		//cout << "New program:\n" << fog << endl;
 		//cout << "Variable change done -- Creating Equation\n";
 		clock_t tStart = clock();
-		Equation* eq_p = new Equation(	dim_vars, as, params, fog, EXPLICIT_SYM, qs, bs);
+		Equation* eq_p = new Equation(	dim_vars, as, params, fog, rational, EXPLICIT_SYM, qs, bs);
 		//Equation* eq_p = new Equation(	dim_vars, as, params, p, EXPLICIT_SYM, qs, bs);
-		double time1 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
 		//cout << "Equation Creation Done -- optimizing Equation\n";
 		//pair<double,double>  res_explicit = eq_p->optimize(&para,&paramSet);
 		pair<double,double>  res_explicit = eq_p->optimize(NULL,&paramSet);
+		//cout << "done!\n";
 		double time2 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
 		cout << "##### " << name << " #####\n";
-		cout << "Time Compute BernsteinCoeffs: " << time1 << endl;
 		cout << "Total Time: " << time2 << endl;
 		//cout << "Result from optimization of: \n" << p << endl;
 		//cout << "min = " << -1*res_explicit.first*err << endl;
@@ -159,6 +266,7 @@ int main(int argc,char** argv){
 
 	}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	//tStart;
 //	double err = std::pow(2,-53);
 //

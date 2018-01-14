@@ -46,7 +46,7 @@ BaseConverter::BaseConverter(lst vars, ex polynomial, vector<int> degrees) {
 	this->polynomial = polynomial;
 
 	// Put the polynomial in extended form and extract variables degrees
-	this->polynomial = this->polynomial.expand();
+	//this->polynomial = this->polynomial.expand();
 	this->degrees = degrees;
 
 	// Initialize the degree shifts
@@ -72,8 +72,8 @@ BaseConverter::BaseConverter(lst vars, ex polynomial, vector<int> degrees) {
 BaseConverter::BaseConverter(lst vars, ex num, ex denom){
 
 	this->vars = vars;
-	this->num = num;
-	this->denom = denom;
+	this->num = num.expand();
+	this->denom = denom.expand();
 
 }
 
@@ -222,7 +222,7 @@ ex BaseConverter::bernCoeff(vector<int> mi){
 
 // Compute the the list of Bernstein control points
 lst BaseConverter::getBernCoeffs(){
-
+//	cout << "BernCoeffs Method classic\n";
 	lst bern_coeffs;
 //	cout << "BaseConverter::getBernCoeffs Function !!\n";
 //	cout << "Number of coeff is = " << this->coeffs.size() << endl;
@@ -239,31 +239,39 @@ lst BaseConverter::getBernCoeffs(){
 lst BaseConverter::getRationalBernCoeffs(){
 
 	lst bern_coeffs;
-
-	cout<<"Degrees: ";
+	//cout << "Rationnal BernCoeffs\n";
+//	cout<<"Degrees: ";
 	vector<int> degs;
 	for(int i=0; i<(signed)this->vars.nops();i++){
 		degs.push_back(max(this->num.degree(this->vars[i]),this->denom.degree(this->vars[i])));
-		cout<<degs[i]<<", ";
+//		cout<<degs[i]<<", ";
 	}
-
+	
 	BaseConverter *num_conv = new BaseConverter(this->vars,this->num,degs);
 	BaseConverter *denom_conv = new BaseConverter(this->vars,this->denom,degs);
+	//cout << "Variables : " << this->vars << endl;
+	//cout << this->denom << endl;
 
 	lst num_bern_coeffs = num_conv->getBernCoeffs();
 	lst denom_bern_coeffs = denom_conv->getBernCoeffs();
+	//cout << "nbcoeffs = " << denom_bern_coeffs.nops() << endl;
+	//cout << "denom bern coeff list = " << denom_bern_coeffs << endl;
+	//lst num_bern_coeffs = num_conv->getBernCoeffsMatrix();
+	//lst denom_bern_coeffs = denom_conv->getBernCoeffsMatrix();
+
+	//cout << "\nCoeffs numer: " << this->num << " => "  << num_bern_coeffs << "\n" ;
+	//cout << "Coeffs denom: " << this->denom << " => "  << denom_bern_coeffs << "\n";
 
 	for(int i=0; i<num_bern_coeffs.nops(); i++){
-		if(denom_bern_coeffs[i] != 0){ // skip negative denominators
+		if(denom_bern_coeffs[i] != 0){ // skip null denominators
 			bern_coeffs.append(num_bern_coeffs[i]/denom_bern_coeffs[i]);
 		}
 	}
 
 	// eliminate duplicates
-	bern_coeffs.unique();
-	cout<<"(Total points:"<<bern_coeffs.nops()<<")\n";
+	//bern_coeffs.unique();
+	//cout<<"(Total points:"<<bern_coeffs.nops()<<")\n";
 	return bern_coeffs;
-
 }
 
 // Compute the the list of Bernstein control points
@@ -414,6 +422,7 @@ void BaseConverter::implicitMaxIndex(){
 
 lst BaseConverter::getBernCoeffsMatrix(){
 
+//	cout << "BernCoeffs Method Matrix\n";
 //	cout << "BaseConverter::getBernCoeffs Function !!\n";
 
 	// degrees increased by one
@@ -433,7 +442,7 @@ lst BaseConverter::getBernCoeffsMatrix(){
 	for(int i=0; i<this->coeffs.size(); i++){
 		if(this->coeffs[i] != 0){
 			vector< int > pos2d = this->n2t(this->pos2multi_index(i),degrees_p);
-	//		cout << "coeff["<<i<<"] = " << this->coeffs[i] << endl;
+//			cout << "coeff["<<i<<"] = " << this->coeffs[i] << endl;
 			A[pos2d[0]][pos2d[1]] = this->coeffs[i];
 		}
 	}
@@ -457,7 +466,7 @@ lst BaseConverter::getBernCoeffsMatrix(){
 
 
 	lst bernCoeffs;
-//	cout << "Coeff recuparation Phase\n";
+	cout << "Coeff recuparation Phase\n";
 	for(int i=0; i<UAt.size(); i++){
 		for(int j=0; j<UAt[i].size(); j++){
 			bernCoeffs.append(UAt[i][j]);
