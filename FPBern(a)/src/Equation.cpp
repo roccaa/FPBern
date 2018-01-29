@@ -12,10 +12,60 @@ Equation::Equation()
 {}
 
 Equation::Equation(	int dim_global, lst vars, lst params, ex eq,
-					bool rationnal,
-					bernstein_computation_method method_BC,
-					lst q_s, lst beta_s){
-	this->method = method_BC;
+					bool exact, lst q_s, lst beta_s){
+	this->base_vars = q_s;
+	this->ampl_vars = beta_s;
+
+	this->coeff_bern_numer = NULL;
+	this->coeff_bern_denom = NULL;
+
+	this->coeff_bern_max = NULL;
+	this->coeff_bern_min = NULL;
+	this->exact = exact;
+	this->use_guess = false;
+	this->dim_global = dim_global;
+	this->equationEx = eq;
+	this->vars = vars;
+	this->params = params;
+	lst tempVars;
+	intVector varTable;
+	this->type = Polynomial_ONLY;
+		
+	int tempDim = 0;
+	for(int k=0;k<vars.nops();k++)
+	{
+		if(eq.has(vars[k]))
+		{
+			tempVars.append(vars[k]);
+			tempDim++;
+			varTable.push_back(k);
+		}
+	}
+	this->varAssociationTable.push_back(varTable);
+	//cout << "In equation Constructor\n";
+	//cout << "the variables are " << tempVars << endl;
+	BaseConverter bc = BaseConverter(tempVars,eq);
+	if(tempVars.nops()>1)
+	{
+		if(this->exact == false){
+			this->explicitBC_coeff = bc.getBernCoeffsMatrix();
+		}	
+		else{
+			this->explicitBC_coeff = bc.getBernCoeffs();
+		}	
+	}
+	else
+	{
+		this->explicitBC_coeff = bc.getBernCoeffs();
+	}
+	assert(this->varAssociationTable.size() == 1);
+	//cout << "Number of bernstein coeff: " << this->explicitBC_coeff.nops() << endl; 	
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+Equation::Equation(	int dim_global, lst vars, lst params, ex numer, ex denom,
+					bool exact, lst q_s, lst beta_s){
 	this->base_vars = q_s;
 	this->ampl_vars = beta_s;
 
@@ -25,119 +75,72 @@ Equation::Equation(	int dim_global, lst vars, lst params, ex eq,
 	this->coeff_bern_max = NULL;
 	this->coeff_bern_min = NULL;
 
-	switch(method_BC)
-	{
-		case IMPLICIT_NUM:
-			cout << "NO method for this tool"<<endl;
-			break;
-		case IMPLICIT_SYM:
-			cout << "NO method for this tool"<<endl;
-			break;
-		case EXPLICIT_SYM:
-			constructor_explicit_sym(dim_global, vars, params, eq, rationnal);
-			break;
-		default:
-			constructor_explicit_sym(dim_global, vars, params, eq, rationnal);
-			break;
-	}
-}
-
-void Equation::constructor_explicit_sym(int dim_global,lst vars, lst params, ex eq, bool fully_rationnal)
-{
 	this->use_guess = false;
 	this->dim_global = dim_global;
-	this->equationEx = eq;
+	this->equationEx = numer/denom;
 	this->vars = vars;
 	this->params = params;
-	//eq.normal();
+	this->exact = exact;
+	//ex temp = eq.normal();
 	lst tempVars;
+	int tempDim = 0;
 	intVector varTable;
-	this->type = Polynomial_ONLY;
-	if(!fully_rationnal){ // Just polynomial
-		
-		int tempDim = 0;
-		for(int k=0;k<vars.nops();k++)
-		{
-			if(eq.has(vars[k]))
-			{
-				tempVars.append(vars[k]);
-				tempDim++;
-				varTable.push_back(k);
-			}
+	for(int k=0;k<vars.nops();k++){
+		if(this->equationEx.has(vars[k])){
+			tempVars.append(vars[k]);
+			tempDim++;
+			varTable.push_back(k);
 		}
-		this->varAssociationTable.push_back(varTable);
-		//cout << "In equation Constructor\n";
-		//cout << "the variables are " << tempVars << endl;
-		BaseConverter bc = BaseConverter(tempVars,eq);
-		if(tempVars.nops()>1)
-		{
-			if(true){
-				this->explicitBC_coeff = bc.getBernCoeffsMatrix();
-			}	
-			else{
-				this->explicitBC_coeff = bc.getBernCoeffs();
-			}	
-		}
-		else
-		{
-			this->explicitBC_coeff = bc.getBernCoeffs();
-		}
-		assert(this->varAssociationTable.size() == 1);
-		//cout << "Number of bernstein coeff: " << this->explicitBC_coeff.nops() << endl; 		
 	}
-	else{
+	if(varTable.size()!=0) this->varAssociationTable.push_back(varTable);
+	//cout << "computing numer denom\n"; 
+	//ex nd = eq.numer_denom();
+	BaseConverter bc = BaseConverter(tempVars,numer, denom);
+	this->explicitBC_coeff = bc.getRationalBernCoeffs();
+	//cout << "Nb bernCoeffs = " << this->explicitBC_coeff.nops() << endl; 
+	this->type = RationalPolynomial_ONLY;
 
-		//ex temp = eq.normal();
-		lst tempVars;
-		int tempDim = 0;
-		intVector varTable;
-		for(int k=0;k<vars.nops();k++){
-			if(eq.has(vars[k])){
-				tempVars.append(vars[k]);
-				tempDim++;
-				varTable.push_back(k);
-			}
-		}
-		if(varTable.size()!=0) this->varAssociationTable.push_back(varTable);
-		//cout << "computing numer denom\n"; 
-		clock_t tStart = clock();
-		ex nd = eq.numer_denom();
-		double time = (double)(clock() - tStart)/CLOCKS_PER_SEC;
-		cout << "[Numerator,Denominator] generation time in GINAC = " << time << endl;
-		BaseConverter bc = BaseConverter(tempVars,nd[0], nd[1]);
-		this->explicitBC_coeff = bc.getRationalBernCoeffs();
-		//cout << "Nb bernCoeffs = " << this->explicitBC_coeff.nops() << endl; 
-		this->type = RationalPolynomial_ONLY;
-
-		
-	}
 }
 
 pair<double,double> Equation::optimize(Parallelotope *set, LinearSystemSet *paramSet)
 {
-
+	//cout << "In [optimize()]" << endl;
 	bern_info optimization;
-	switch(method)
-	{
-		case IMPLICIT_NUM:
-			break;
-
-		case IMPLICIT_SYM:
-			break;
-
-		case EXPLICIT_SYM:
-			optimization = optimize_explicit(set, paramSet);
-			break;
-
-		default:
-			break;
-	}
+	optimization = optimize_explicit(set, paramSet);
+	//cout << "recup results\n";
 	pair<double,double> res;
-	res.first = optimization.min;
-	res.second = optimization.max;
-
+	if(this->exact==true){
+		res.first = ex_to<numeric>(optimization.min_e).to_double();
+		res.second = ex_to<numeric>(optimization.max_e).to_double();
+	}
+	else{
+		res.first = optimization.min;
+		res.second = optimization.max;
+	}
+	
+	//cout << "delete coeffs list\n";
 	delete(optimization.coeff_max);
 	delete(optimization.coeff_min);
+
+	return res;
+}
+
+
+pair<ex,ex> Equation::optimize_exact(Parallelotope *set, LinearSystemSet *paramSet)
+{
+	//cout << "In [optimize_exact()]" << endl;
+	bern_info optimization;
+
+	//cout << "entering optimization code\n";
+	optimization = optimize_explicit(set, paramSet);
+
+	//cout << "recup results\n";
+	pair<ex,ex> res;
+	res.first = optimization.min_e;
+	res.second = optimization.max_e;
+	//cout << "delete coeffs list\n";
+	//delete(optimization.coeff_max);
+	//delete(optimization.coeff_min);
 
 	return res;
 }
@@ -168,6 +171,45 @@ double abs_sum(ex p)
 		else
 		{
 			sum = sum + abs(ex_to<numeric>((m).op(1)).to_double());
+			//exsum = exsum + abs((poly.op(i)).op(1));
+		}
+
+	}
+
+    //cout << "exsum = " << ex_to<numeric>(exsum).to_double() << endl;
+	//cout << "sum = " << sum << endl;
+	//assert(0);
+	return sum;
+	//return ex_to<numeric>(exsum).to_double();
+}
+
+
+ex exact_abs_sum(ex p)
+{
+	//cout << "in exact_abs_sum func \n"; 
+	ex poly = p.expand();
+	int nbmonome = poly.nops();
+	ex sum = 0;
+	//ex exsum = 0;
+	for(int i=0;i<nbmonome;i++)
+	{
+		ex m = poly.op(i);
+		if(m.nops() < 2)
+		{
+			if( is_a<numeric>( (m) ) )
+			{
+				sum = sum + abs(ex_to<numeric>((m)));
+				//exsum = exsum + abs(poly.op(i));
+			}
+			else
+			{
+				sum = sum + 1;
+				//exsum = exsum + 1;
+			}
+		}
+		else
+		{
+			sum = sum + abs(ex_to<numeric>((m).op(1)));
 			//exsum = exsum + abs((poly.op(i)).op(1));
 		}
 
@@ -236,17 +278,25 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 		default:
 			maximum = -INFINITY;
 			minimum = INFINITY; // -INFINITY
+			//cout << "setting initial values for max and min\n"; 
+			parser p;
+			ex minimum_e; 
+			if(exact ==true )
+				minimum_e = p("2^128"); // Max value in Ginac ?
+			ex maximum_e = -minimum_e;
 			int nbcoeff = coeffs_symb.nops();
 			//cout << " In optimize function\n";
 			//cout << "Number of bernstein coeff = " << nbcoeff << endl;
 			//for(int j=0; j<coeffs_symb.nops();j++)
-			double sum;  
+			double sum_d; 
+			ex sum_e; 
 			for (lst::const_iterator c = coeffs_symb.begin(); c != coeffs_symb.end(); ++c)
 			//for(int j=0; j<nbcoeff;j++)
 			{
 				//cout << "substitution\n";
 				//coeffs_symb[j] = coeffs_symb[j].subs(subs_map,subs_options::no_pattern);
 				//cout << "Linear optimization\n"; 
+				//cout << "#######################################" << endl;
 				//cout << "the current coeff is:\n";
 				//cout << (*c) << endl;
 				//cout << "The parameters are: \n";
@@ -255,19 +305,30 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 				//result.coeff_min->at(j) = optimize_max(-coeffs_symb[j],paramSet,this->params);
 				//minimum  = max(result.coeff_min->at(j),minimum);
 				//maximum  = max(result.coeff_max->at(j),maximum);
-				
-				sum = abs_sum(*c);
+					
+				if(this->exact==true){
+					sum_e = exact_abs_sum(*c);
+					minimum_e  = min(-sum_e,minimum_e);
+					maximum_e  = max(sum_e,maximum_e);
+				}
+				else{
+					sum_d = abs_sum(*c);
+					minimum  = min(-sum_d,minimum);
+					maximum  = max(sum_d,maximum);
+					//cout  <<"minimum = " << minimum <<"\n";
+					//cout << "maximum = " << maximum << "\n";
+					//cout << "#######################################" << endl;
+				}
 				//sum = abs_sum(coeffs_symb[j]);
-				minimum  = min(-sum,minimum);
-				maximum  = max(sum,maximum);
-				//cout  <<"minimum = " << minimum <<"\n";
-				//cout << "maximum = " << maximum << "\n";
-				//cout<< "#######\n\n";
+
+				
 				
 			}
 			//cout << "done\n";
 			result.min = minimum;
 			result.max = maximum;
+			result.min_e = minimum_e;
+			result.max_e = maximum_e;
 			break;
 	}
 

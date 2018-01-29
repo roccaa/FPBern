@@ -87,6 +87,8 @@ struct bern_info
 	vector<double>* coeff_max;
 	double min;
 	double max;
+	ex min_e;
+	ex max_e;
 };
 
 enum {OFO,AFO};

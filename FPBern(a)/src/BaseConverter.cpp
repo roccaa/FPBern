@@ -72,8 +72,8 @@ BaseConverter::BaseConverter(lst vars, ex polynomial, vector<int> degrees) {
 BaseConverter::BaseConverter(lst vars, ex num, ex denom){
 
 	this->vars = vars;
-	this->num = num.expand();
-	this->denom = denom.expand();
+	this->num = num;
+	this->denom = denom;
 
 }
 
@@ -267,7 +267,8 @@ lst BaseConverter::getRationalBernCoeffs(){
 			bern_coeffs.append(num_bern_coeffs[i]/denom_bern_coeffs[i]);
 		}
 	}
-
+	//cout << "##############################################\n";
+	//cout << "Coeffs Final: " << bern_coeffs << "\n";
 	// eliminate duplicates
 	//bern_coeffs.unique();
 	//cout<<"(Total points:"<<bern_coeffs.nops()<<")\n";
@@ -466,13 +467,13 @@ lst BaseConverter::getBernCoeffsMatrix(){
 
 
 	lst bernCoeffs;
-	cout << "Coeff recuparation Phase\n";
+	//cout << "Coeff recuparation Phase\n";
 	for(int i=0; i<UAt.size(); i++){
 		for(int j=0; j<UAt[i].size(); j++){
 			bernCoeffs.append(UAt[i][j]);
 		}
 	}
-
+	
 	return bernCoeffs;
 
 

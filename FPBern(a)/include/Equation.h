@@ -16,7 +16,10 @@ class Equation {
 
 public:
 	Equation();
-	Equation(int dim_global,lst vars, lst params, ex eq, bool rationnal, bernstein_computation_method method_BC, lst q_s, lst beta_s);
+	// Polynomial
+	Equation(int dim_global,lst vars, lst params, ex eq, bool exact, lst q_s, lst beta_s);
+	// Rational Function
+	Equation(int dim_global,lst vars, lst params, ex num, ex denom, bool exact, lst q_s, lst beta_s);
 	~Equation();
 
 	//TODO
@@ -25,7 +28,7 @@ public:
 	// recompute num_berncoeff => after split length and base vertex change
 
 	pair<double,double> optimize(Parallelotope *set, LinearSystemSet *paramSet);
-
+	pair<ex,ex> optimize_exact(Parallelotope *set, LinearSystemSet *paramSet);
 	bern_info optimize_explicit(Parallelotope *set, LinearSystemSet *paramSet);
 
 	double optimize_max(ex num_cs,LinearSystemSet *paramSet,lst params);
@@ -47,7 +50,7 @@ public:
 	vector<ex>* coeff_bern_max;
 	vector<ex>* coeff_bern_min;
 
-
+	lst explicitBC_coeff;
 private:
 	lst explicitBC_num;
 	lst explicitBC_denom;
@@ -63,7 +66,8 @@ private:
 	bernstein_computation_method method;
 	lst base_vars;
 	lst ampl_vars;
-	lst explicitBC_coeff;
+	//lst explicitBC_coeff;
+	bool exact;
 
 
 };

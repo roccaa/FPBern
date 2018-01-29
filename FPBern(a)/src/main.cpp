@@ -19,7 +19,27 @@ using namespace std;
 
 int main(int argc,char** argv){
 
-
+// Prototype of parser for rational bounds
+/*
+		parser p;
+		std::string file = argv[1];
+		boost::property_tree::ptree pt;
+	    boost::property_tree::ini_parser::read_ini((file+".ini"), pt);
+	    int dim_vars = pt.get<int>("OPTIONS.nbvars");
+	    string sep = ",";
+	    string string_bl = pt.get<string>("PROGRAM.input_bl");
+		for(int j=0;j<dim_vars;j++)
+		{
+			int i = string_bl.find(sep);
+			string res = string_bl.substr(0,i);
+			string_bl.erase(string_bl.begin(),string_bl.begin()+i+1);
+			ex value;
+			value = p(res);
+			cout << "value: " << value << endl;
+			cout << "value rational? = " << ex_to<numeric>(value).is_rational() << endl;
+			cout << "double value = " << ex_to<numeric>(value).to_double() << endl;
+		} 
+*/
 ////////////////////////////////////////////////////////////////////////////// 
 /*
 	clock_t tStart = clock();	
@@ -114,6 +134,7 @@ int main(int argc,char** argv){
     //assert(0);
 */
  /////////////////////////////////////////////////////////////////////////////////  
+
 	if(argc == 1)
 	{
 		cout << " No input files -- please give a .ini input file with a polynomial program to start\n";
@@ -134,6 +155,7 @@ int main(int argc,char** argv){
 	    //cout << "err = " << err << endl;
 	    int dim_vars = pt.get<int>("OPTIONS.nbvars");
 	    int dim_param = pt.get<int>("OPTIONS.nberrors");
+		bool exact = pt.get<bool>("OPTIONS.exact");
 	    symtab table_symbols;
 
 	    lst vars;
@@ -150,41 +172,68 @@ int main(int argc,char** argv){
 		}
 
 	    string p_string  = pt.get<string>("PROGRAM.function");
+		clock_t tStart = clock();
 	    //cout << p_string << endl;
 	    parser reader(table_symbols);
 	    ex p = reader(p_string);
+		ex fn;
+		ex fd;
 		bool rational = false;
-		if(p.denom() != 1){
+		if(p.denom() != 1 && is_a<numeric>(p.denom())== false ){
 			rational = true;
+			clock_t tnormalStart = clock();
+			ex nd = p.numer_denom();
+			double tnormalFin = (double)(clock() - tnormalStart)/CLOCKS_PER_SEC;
+			cout << "[Ginac numer/denom normalization time]: " << tnormalFin << endl;
+			fn = nd[0];
+			fd = nd[1];
+			//cout << p.denom() << endl;
 		}
 		else
 			p = p.expand();
 		
-	    //cout << p << endl;
+		//assert(0);
 
 	    string separateur = ",";
 	    string string_bl = pt.get<string>("PROGRAM.input_bl");
-	    doubleVector bl = read_doubleVector(&string_bl,separateur,dim_vars);
-	    //cout << bl;
-	    string string_bu = pt.get<string>("PROGRAM.input_bu");
-	    doubleVector bu = read_doubleVector(&string_bu,separateur,dim_vars	);
-	    //cout << bu;
-
-	    vector<double> pAj (params.nops(),0);
-		vector< vector<double> > pA (2*params.nops(),pAj);
-		vector<double> pb (2*params.nops(),0);
-		for(int j=0;j<2*params.nops();j++)
+		string string_bu = pt.get<string>("PROGRAM.input_bu");
+		parser parse;
+		lst exact_bl;
+		lst exact_bu;
+		doubleVector bl;
+		doubleVector bu;
+		for(int j=0;j<dim_vars;j++)
 		{
-			if(j<(params.nops()))
-				pA[j][j] = -1;
-			else
-				pA[j][j-(params.nops())] = 1;
+			int ibl = string_bl.find(separateur);
+			int ibu = string_bu.find(separateur);
+			string res_bl = string_bl.substr(0,ibl);
+			string res_bu = string_bu.substr(0,ibu);
+			string_bl.erase(string_bl.begin(),string_bl.begin()+ibl+1);
+			string_bu.erase(string_bu.begin(),string_bu.begin()+ibu+1);
+			exact_bl.append(parse(res_bl));
+			bl.push_back(ex_to<numeric>(parse(res_bl)).to_double());
+			exact_bu.append(parse(res_bu));	
+			bu.push_back(ex_to<numeric>(parse(res_bu)).to_double());	
+		} 
+		LinearSystem parameters ;
+		LinearSystemSet paramSet ;
+		if(dim_param!=0){
+			vector<double> pAj (params.nops(),0);
+			vector< vector<double> > pA (2*params.nops(),pAj);
+			vector<double> pb (2*params.nops(),0);
+			for(int j=0;j<2*params.nops();j++)
+			{
+				if(j<(params.nops()))
+					pA[j][j] = -1;
+				else
+					pA[j][j-(params.nops())] = 1;
 
-			pb[j] = 1;
+				pb[j] = 1;
+			}
+
+			parameters = LinearSystem(pA,pb);
+			paramSet = LinearSystemSet(&parameters);
 		}
-
-		LinearSystem parameters = LinearSystem(pA,pb);
-		LinearSystemSet paramSet = LinearSystemSet(&parameters);
 
 		lst qs,as,bs; // Symbolic variables for linear transformation
 		for(int j=1;j<=dim_vars;j++)
@@ -207,15 +256,15 @@ int main(int argc,char** argv){
 		//cout << "Building init set\n";
 		Parallelotope para = Parallelotope(set_vars,u);
 
-		doubleVector bV = bl;
-	    doubleVector ampl = bu-bl;
-
-	    poly_values pv;
-	    pv.base_vertex = bV;
-	    pv.versors = u;
-	    pv.lenghts = ampl;
+   		doubleVector bV = bl;
+		doubleVector ampl = bu-bl;
+		poly_values pv;
+		pv.base_vertex = bV;
+		pv.versors = u;
+		pv.lenghts = ampl;
+		para.add_polyValues(pv);
 	    //cout << "Addind p values \n";
-	    para.add_polyValues(pv);
+	    
 	    //cout << para.get_poly_values().base_vertex;
 	    //cout << "done\n";
 
@@ -225,45 +274,87 @@ int main(int argc,char** argv){
 
 		lst sub;
 		ex fog;
+		ex fn_og;
+		ex fd_og;
+
 		for(int i=0; i<(signed)generator_function.nops(); i++){
 			sub.append(vars[i] == generator_function[i]);
 		}
-		//cout << "Ready for substitution in p\n";
-		//cout << "subs = \n" << sub << endl;
-		fog = p.subs(sub,subs_options::no_pattern);
-
 		
+		if(rational == true){
+			fn_og = fn.subs(sub,subs_options::no_pattern);	
+			fd_og = fd.subs(sub,subs_options::no_pattern);
+		}
+		else
+			fog = p.subs(sub,subs_options::no_pattern);
+
 		lst subs_map;
 		for(int i=0;i<pv.lenghts.size();i++){
-			subs_map.append(qs[i] == pv.base_vertex[i]);
-			subs_map.append(bs[i] == pv.lenghts[i]);
+			if(exact == true){
+				subs_map.append(qs[i] == exact_bl[i]);
+				subs_map.append(bs[i] == exact_bu[i]-exact_bl[i]);
+			}
+			else{
+				subs_map.append(qs[i] == pv.base_vertex[i]);
+				subs_map.append(bs[i] == pv.lenghts[i]);
+			}
 		}
-		//cout << "subs_map = \n" << subs_map << endl;
-		fog =  fog.subs(subs_map,subs_options::no_pattern);
-		//assert(0);
-		fog =  fog.expand();
-		//cout << fog << "\n";
-		//cout << "######\n";
-		//cout << fog.numer() << "\n";
-		//cout << "######\n";
- 		//cout << fog.denom() << "\n";
-		
-		//cout << "New program:\n" << fog << endl;
-		//cout << "Variable change done -- Creating Equation\n";
-		clock_t tStart = clock();
-		Equation* eq_p = new Equation(	dim_vars, as, params, fog, rational, EXPLICIT_SYM, qs, bs);
-		//Equation* eq_p = new Equation(	dim_vars, as, params, p, EXPLICIT_SYM, qs, bs);
-		//cout << "Equation Creation Done -- optimizing Equation\n";
-		//pair<double,double>  res_explicit = eq_p->optimize(&para,&paramSet);
-		pair<double,double>  res_explicit = eq_p->optimize(NULL,&paramSet);
-		//cout << "done!\n";
-		double time2 = (double)(clock() - tStart)/CLOCKS_PER_SEC;
-		cout << "Total Time: " << time2 << endl;
-		//cout << "Result from optimization of: \n" << p << endl;
-		//cout << "min = " << -1*res_explicit.first*err << endl;
-		//cout << "max = " << res_explicit.second*err << endl;
-		cout << "roundoff error = " << max(abs(res_explicit.first*err),abs(res_explicit.second*err)) << endl;
 
+		if(rational == true){
+			fn_og =  fn_og.subs(subs_map,subs_options::no_pattern);
+			fn_og =  fn_og.expand();
+			fd_og  =  fd_og .subs(subs_map,subs_options::no_pattern);
+			fd_og  =  fd_og .expand();
+		}
+		else{
+			fog =  fog.subs(subs_map,subs_options::no_pattern);
+			fog =  fog.expand();
+		}
+
+		//cout << "Equation constructor begin\n";
+		clock_t tcomputeStart = clock();
+		Equation* eq_p;
+		if(rational == true)
+			eq_p = new Equation(dim_vars, as, params, fn_og, fd_og, exact, qs, bs);
+		else
+			eq_p = new Equation(dim_vars, as, params, fog, exact, qs, bs);
+		
+		//cout << "Equation constructor done\n";
+		if(dim_param==0)
+		{	
+			lst sol_coeffs = eq_p->explicitBC_coeff;
+			double optimax = -INFINITY;
+			double coeff;
+			for (lst::const_iterator c = sol_coeffs.begin(); c != sol_coeffs.end(); ++c)
+			{
+				coeff = ex_to<numeric>(*c).to_double();
+				optimax  = max(coeff,optimax);
+			}
+			cout << "max = " << optimax << endl;
+		
+		}
+		else{
+			pair<ex,ex>  res_exact;
+			pair<double,double>  res_explicit;
+			if(exact == true)
+				res_exact = eq_p->optimize_exact(NULL,&paramSet);
+			else
+				res_explicit = eq_p->optimize(NULL,&paramSet);
+			//cout << "Opimization done\n";
+
+			double tcomputeEnd = (double)(clock() - tcomputeStart)/CLOCKS_PER_SEC;
+			double time = (double)(clock() - tStart)/CLOCKS_PER_SEC;
+			cout << "Solving Time [Optimization only]: "  << tcomputeEnd << endl;
+			cout << "Function parsing overhead: "  << time-tcomputeEnd << endl;
+			cout << "Total Time: " << time << endl;
+		
+			if(exact == true){
+				cout << "Exact roundoff error = " << max(abs(res_exact.first),abs(res_exact.second))<< "*epsilon" << endl;
+				cout << "roundoff error = " << max(abs(res_exact.first*err),abs(res_exact.second*err)) << endl;
+			}		
+			else
+				cout << "roundoff error = " << max(abs(res_explicit.first*err),abs(res_explicit.second*err)) << endl;
+		}
 	}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
