@@ -226,7 +226,7 @@ ex exact_abs_sum(ex p)
 bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *paramSet)
 {
 	bern_info result;
-
+	//cout << " In optimize_explicit function\n";
 	lst coeffs_symb = this->explicitBC_coeff;
 	//cout << "BC symb = \n " << coeffs_symb << "\n";
 	result.partial = false;
@@ -285,7 +285,7 @@ bern_info Equation::optimize_explicit(Parallelotope *set, LinearSystemSet *param
 				minimum_e = p("2^128"); // Max value in Ginac ?
 			ex maximum_e = -minimum_e;
 			int nbcoeff = coeffs_symb.nops();
-			//cout << " In optimize function\n";
+			
 			//cout << "Number of bernstein coeff = " << nbcoeff << endl;
 			//for(int j=0; j<coeffs_symb.nops();j++)
 			double sum_d; 

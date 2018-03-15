@@ -325,6 +325,7 @@ int main(int argc,char** argv){
 			lst sol_coeffs = eq_p->explicitBC_coeff;
 			double optimax = -INFINITY;
 			double coeff;
+			cout << "In main(): no parameters :: coeffs = \n" << sol_coeffs << endl;
 			for (lst::const_iterator c = sol_coeffs.begin(); c != sol_coeffs.end(); ++c)
 			{
 				coeff = ex_to<numeric>(*c).to_double();

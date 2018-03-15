@@ -240,13 +240,13 @@ lst BaseConverter::getRationalBernCoeffs(){
 
 	lst bern_coeffs;
 	//cout << "Rationnal BernCoeffs\n";
-//	cout<<"Degrees: ";
+	//cout<<"Degrees: ";
 	vector<int> degs;
 	for(int i=0; i<(signed)this->vars.nops();i++){
 		degs.push_back(max(this->num.degree(this->vars[i]),this->denom.degree(this->vars[i])));
-//		cout<<degs[i]<<", ";
+	//	cout<<degs[i]<<", ";
 	}
-	
+	//cout << "\n";
 	BaseConverter *num_conv = new BaseConverter(this->vars,this->num,degs);
 	BaseConverter *denom_conv = new BaseConverter(this->vars,this->denom,degs);
 	//cout << "Variables : " << this->vars << endl;
