@@ -18,6 +18,7 @@ FPBern(a) handles input files with .ini extension (mandatory) with the following
  + OPTIONS
 - name = `name of the program`
 - precision = `allowing to define a machine epsilon equal to 2^(-precision)`
+- exact = `activate or not the rationnal arithmetic for bernstein expansion`
 - nbvars = `dimension of x`
 - nberrors = `dimension of e`
  + Programs
